@@ -3,6 +3,7 @@ import { ethers, utils } from "ethers";
 import abi from "./contracts/Bank.json";
 
 function App() {
+  //contract address is the first one
   // bankContract deployed to: 0xd48988b1a6943aFDa005245512f6e5f60297A45C
   // bankContract owner address: 0xd427b183935D6Be800cE79C9B9CD6190e17f0c00
 
@@ -19,7 +20,7 @@ function App() {
   const [customerAddress, setCustomerAddress] = useState(null);
   const [error, setError] = useState(null);
 
-  const contractAddress = "0xd427b183935D6Be800cE79C9B9CD6190e17f0c00";
+  const contractAddress = "0xd48988b1a6943aFDa005245512f6e5f60297A45C";
   const contractABI = abi.abi;
 
   const checkIfWalletIsConnected = async () => {
@@ -126,7 +127,6 @@ function App() {
 
   const customerBalanceHandler = async () => {
     try {
-      //your code here
       if (window.ethereum) {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
