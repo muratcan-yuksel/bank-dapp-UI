@@ -45,6 +45,21 @@ function App() {
   const getBankName = async () => {
     try {
       //your code here
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const BankContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+        let bankName = await BankContract.bankName();
+        bankName = utils.parseBytes32String(bankName);
+        setCurrentBankName(bankName.toString());
+      } else {
+        console.log("Ethereum object not found, install Metamask.");
+        setError("Please install a MetaMask wallet to use our bank.");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -53,7 +68,26 @@ function App() {
   const setBankNameHandler = async (event) => {
     event.preventDefault();
     try {
-      //your code here
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const bankContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+
+        const txn = await bankContract.setBankName(
+          utils.formatBytes32String(inputValue.bankName)
+        );
+        console.log("Setting Bank Name...");
+        await txn.wait();
+        console.log("Bank Name Changed", txn.hash);
+        await getBankName();
+      } else {
+        console.log("Ethereum object not found, install Metamask.");
+        setError("Please install a MetaMask wallet to use our bank.");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -61,15 +95,53 @@ function App() {
 
   const getbankOwnerHandler = async () => {
     try {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const bankContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+        //call our contract to get the address of the bank owner (that wass stored as a public variable)
+        let owner = await bankContract.bankOwner();
+        setBankOwnerAddress(owner);
+        //check if the current MetaMask Wallet address matches the address that deployed and owns the contract
+        const [account] = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        //If that is the case, we use setIsBankerOwner to set our bank owner flag to true and show the special admin panel.
+        if (owner.toLowerCase() === account.toLowerCase()) {
+          setIsBankerOwner(true);
+        }
+      } else {
+        console.log("Ethereum object not found, install Metamask.");
+        setError("Please install a MetaMask wallet to use our bank.");
+      }
       //your code here
     } catch (error) {
       console.log(error);
     }
   };
 
-  const customerBalanceHanlder = async () => {
+  const customerBalanceHandler = async () => {
     try {
       //your code here
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const bankContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+        let balance = await bankContract.getCustomerBalance();
+        setCustomerTotalBalance(utils.formatEther(balance));
+        console.log("Retrieved balance...", balance);
+      } else {
+        console.log("Ethereum object not found, install Metamask.");
+        setError("Please install a MetaMask wallet to use our bank.");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -83,16 +155,58 @@ function App() {
   };
 
   const deposityMoneyHandler = async (event) => {
+    event.preventDefault();
     try {
-      //your code here
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const bankContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+        const txn = await bankContract.depositMoney({
+          value: ethers.utils.parseEther(inputValue.deposit),
+        });
+        console.log("Depositing money...");
+        await txn.wait();
+        console.log("Depositing money...done", txn.hash);
+        //After the transaction is completed we call our customerBalanceHandler() to update the balance of our account.
+        customerBalanceHandler();
+      } else {
+        console.log("Ethereum object not found, install Metamask.");
+        setError("Please install a MetaMask wallet to use our bank.");
+      }
     } catch (error) {
       console.log(error);
     }
   };
 
   const withDrawMoneyHandler = async (event) => {
+    event.preventDefault();
     try {
-      //your code here
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const bankContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+        let myAdress = await signer.getAddress();
+        console.log("provider signer...", myAdress);
+        const txn = await bankContract.withdrawMoney(
+          myAdress,
+          ethers.utils.parseEther(inputValue.withdraw)
+        );
+        console.log("Withdrawing money...");
+        await txn.wait();
+        console.log("Withdrawing money...done", txn.hash);
+        customerBalanceHandler();
+      } else {
+        console.log("Ethereum object not found, install Metamask.");
+        setError("Please install a MetaMask wallet to use our bank.");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -102,7 +216,7 @@ function App() {
     checkIfWalletIsConnected();
     getBankName();
     getbankOwnerHandler();
-    customerBalanceHanlder();
+    customerBalanceHandler();
   }, [isWalletConnected]);
 
   return (
