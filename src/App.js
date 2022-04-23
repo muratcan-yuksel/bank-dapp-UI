@@ -3,8 +3,8 @@ import { ethers, utils } from "ethers";
 import abi from "./contracts/Bank.json";
 
 function App() {
-  // BankContract deployed to: 0xd48988b1a6943aFDa005245512f6e5f60297A45C
-  // BankContract owner address: 0xd427b183935D6Be800cE79C9B9CD6190e17f0c00
+  // bankContract deployed to: 0xd48988b1a6943aFDa005245512f6e5f60297A45C
+  // bankContract owner address: 0xd427b183935D6Be800cE79C9B9CD6190e17f0c00
 
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [isBankerOwner, setIsBankerOwner] = useState(false);
@@ -48,12 +48,12 @@ function App() {
       if (window.ethereum) {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
-        const BankContract = new ethers.Contract(
+        const bankContract = new ethers.Contract(
           contractAddress,
           contractABI,
           signer
         );
-        let bankName = await BankContract.bankName();
+        let bankName = await bankContract.bankName();
         bankName = utils.parseBytes32String(bankName);
         setCurrentBankName(bankName.toString());
       } else {
